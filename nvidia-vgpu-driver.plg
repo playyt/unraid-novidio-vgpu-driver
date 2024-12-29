@@ -163,6 +163,35 @@ disable_xconfig=false
 update_check=true' > "&plugin;/settings.cfg"
 fi
 
+###### SETUP - THIS REPLACES THE USER SCRIPT
+#Set up USB directories for saved preferences
+if [ ! -d /boot/config/nvidia-vgpu ]; then
+    mkdir -p /boot/config/nvidia-vgpu
+fi
+
+if [ ! -d /etc/vgpu_unlock/ ]; then
+    mkdir -p /etc/vgpu_unlock/
+fi
+
+if [ ! -f /boot/config/modprobe.d/nvidia.conf ]; then
+  touch /boot/config/modprobe.d/nvidia.conf
+  echo "options nvidia cudahost=1" > /boot/config/modprobe.d/nvidia.conf
+fi
+
+#copy saved preferences to running UNRAID dirs
+if [ -f /boot/config/nvidia-vgpu/profile_override.toml ]; then
+  ln -sf /boot/config/nvidia-vgpu/profile_override.toml /etc/vgpu_unlock/profile_override.toml
+else 
+  touch /boot/config/nvidia-vgpu/profile_override.toml
+  ln -sf /boot/config/nvidia-vgpu/profile_override.toml /etc/vgpu_unlock/profile_override.toml
+fi
+
+#unlock gpu 
+echo "unlock = false" > /etc/vgpu_unlock/config.toml
+
+env LD_PRELOAD=/usr/local/lib/libvgpu_unlock_rs.so >/dev/null
+
+
 #Add update check entry if not exists
 if [ ! "$(grep -q "update_check=" &plugin;/settings.cfg)" ]; then
   echo "update_check=true" &gt;&gt; &plugin;/settings.cfg
@@ -215,6 +244,20 @@ else
   echo
   echo "--------------Installation of Nvidia vgpu driver v$(echo $LAT_PACKAGE | cut -d '-' -f3) successful--------------"
 fi
+
+### RESTART NVIDIA PROCESS
+if pgrep -x nvidia-vgpud > /dev/null
+then
+    nvidia-vgpud stop
+fi
+if pgrep -x nvidia-vgpu-mgr > /dev/null
+then
+    nvidia-vgpu-mgr stop
+    killall nvidia-vgpu-mgr
+fi
+sleep 3
+LD_PRELOAD=/usr/local/lib/libvgpu_unlock_rs.so nvidia-vgpud 
+LD_PRELOAD=/usr/local/lib/libvgpu_unlock_rs.so nvidia-vgpu-mgr
 
 </INLINE>
 </FILE>
