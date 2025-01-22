@@ -1,7 +1,7 @@
 <?xml version='1.0' standalone='yes'?>
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "novidio-vgpu-driver">
-  <!ENTITY author    "novidio">
+  <!ENTITY author    "playyt">
   <!ENTITY version   "2024.12.29">
   <!ENTITY launch    "Settings/novidio-vgpu-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
